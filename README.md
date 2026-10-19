@@ -1,36 +1,39 @@
 # playwright-unified-logger
 
-Playwright E2E 测试统一日志库：在一次测试运行中协调捕获网络请求、浏览器控制台、路由变化和测试代码日志，缓冲写入文件，并在测试结束时输出摘要。
+[简体中文](README.zh.md)
 
-## 特性
+Unified logging for Playwright E2E tests: coordinates capture of network requests, browser console output, route changes, and test code logs within a single test run, writes them to files with buffered I/O, and prints a summary when the test finishes.
 
-- 四类日志统一协调：网络（请求/响应/失败）、控制台、路由变化、测试代码 `console`
-- 缓冲文件写入，避免高频 I/O 阻塞测试
-- 重复日志去重与聚合统计
-- Playwright fixture 零配置接入，测试结束自动打印摘要并写日志
-- 事件总线（`network:error` 等）支持自定义处理
-- 编程配置 + 环境变量双通道
+## Features
 
-## 安装
+- Four log categories coordinated together: network (requests / responses / failures), console, route changes, and test-code `console`
+- Buffered file writes keep high-frequency I/O from stalling tests
+- Duplicate log deduplication and aggregated statistics
+- Zero-config Playwright fixture that prints the summary and writes log files automatically when each test ends
+- Event bus (`network:error` and more) for custom handling
+- Dual configuration channels: programmatic options and environment variables
+
+## Installation
 
 ```bash
 npm install -D playwright-unified-logger
 ```
 
-peer 依赖 `@playwright/test >= 1.40.0`，请确保项目已安装 Playwright。
+Peer dependency: `@playwright/test >= 1.40.0` — make sure Playwright is installed in your project.
 
-## 快速开始（fixture，推荐）
+## Quick Start (fixture, recommended)
 
 ```typescript
 import { test, expect } from 'playwright-unified-logger/fixtures'
 
 test('example', async ({ page, unifiedLogger }) => {
   await page.goto('https://example.com')
-  // unifiedLogger 由 fixture 自动创建，测试结束自动销毁并输出日志
+  // unifiedLogger is created by the fixture and destroyed automatically;
+  // logs are written and the summary printed when the test ends
 })
 ```
 
-自定义配置时用 `createLoggerFixture`：
+Use `createLoggerFixture` for custom configuration:
 
 ```typescript
 import { createLoggerFixture } from 'playwright-unified-logger/fixtures'
@@ -42,67 +45,67 @@ test('example', async ({ page, unifiedLogger }) => {
 })
 ```
 
-## 直接使用
+## Direct Usage
 
 ```typescript
 import { UnifiedLogger } from 'playwright-unified-logger'
 
 const logger = new UnifiedLogger(page, testTitle)
-// ... 测试逻辑 ...
+// ... test logic ...
 logger.printSummary('Test Summary')
 await logger.finalize()
 ```
 
-## 单独使用子日志器
+## Standalone Sub-loggers
 
 ```typescript
 import { NetworkLogger, ConsoleLogger, RouteLogger, TestCodeLogger } from 'playwright-unified-logger'
 ```
 
-## 事件总线
+## Event Bus
 
 ```typescript
 logger.events.on('network:error', (event) => {
-  // 自定义处理，事件类型见导出的 LoggerEventType
+  // custom handling; event types are exported as LoggerEventType
 })
 ```
 
-## 配置
+## Configuration
 
-编程配置（构造参数）：
+Programmatic (constructor options):
 
 ```typescript
 const logger = new UnifiedLogger(page, testTitle, {
-  logLevel: 'verbose',            // mini | normal | verbose | silent，默认 mini
+  logLevel: 'verbose',            // mini | normal | verbose | silent, default mini
   outputDir: 'test-results/unified-logs',
-  deduplication: true,            // 重复日志去重，默认 true
-  aggregation: true,              // 聚合统计，默认 true
-  compactMode: false,             // 紧凑输出，默认 false
+  deduplication: true,            // dedupe repeated logs, default true
+  aggregation: true,              // aggregated statistics, default true
+  compactMode: false,             // compact output, default false
   network: { urlFilter: url => url.includes('/api/') },
   console: { filterPatterns: [/HMR/i, /React DevTools/i] },
 })
 ```
 
-环境变量（兼容旧 `DEMO_LOG_*` 前缀）：
+Environment variables (the legacy `DEMO_LOG_*` prefix is also supported):
 
-| 变量 | 值 | 默认 |
+| Variable | Values | Default |
 |---|---|---|
 | `UNIFIED_LOG_LEVEL` | mini / normal / verbose / silent | mini |
 | `UNIFIED_LOG_DEDUP` | true / false | true |
 | `UNIFIED_LOG_AGGREGATE` | true / false | true |
 | `UNIFIED_LOG_COMPACT` | true / false | false |
-| `UNIFIED_LOG_OUTPUT_DIR` | 目录路径 | `test-results/unified-logs`（相对当前工作目录） |
+| `UNIFIED_LOG_OUTPUT_DIR` | directory path | `test-results/unified-logs` (relative to the current working directory) |
 
-## 开发与发布
+## Development & Publishing
 
 ```bash
 npm install
-npm run build        # tsc 构建到 dist/
+npm run build        # tsc build into dist/
 npm run type-check
 npm run lint
 ```
 
-发布流程：更新 `package.json` 版本号并提交，打 `v*` tag 推送，GitHub Actions 自动执行 `npm ci -> build -> npm publish --provenance`。
+Publishing: bump the version in `package.json`, commit, and push a `v*` tag; GitHub Actions then runs `npm ci -> build -> npm publish --provenance`.
 
 ## License
 
